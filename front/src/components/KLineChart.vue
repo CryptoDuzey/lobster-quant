@@ -349,13 +349,16 @@ function analyzeCurrentChart() {
   width: 100%;
   height: 100%;
   min-height: 420px;
+  border-color: rgba(212, 175, 55, 0.16);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 18px 70px rgba(0, 0, 0, 0.32);
 }
 
 .chart-header {
   display: grid;
-  grid-template-columns: minmax(180px, auto) minmax(256px, 1fr) auto;
+  grid-template-columns: minmax(178px, auto) minmax(260px, 1fr) auto;
   align-items: center;
-  min-height: 50px;
+  min-height: 46px;
+  padding: 9px 12px;
 }
 
 .chart-title-group {
@@ -369,7 +372,7 @@ function analyzeCurrentChart() {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 28px;
+  min-height: 26px;
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.025);
@@ -378,7 +381,7 @@ function analyzeCurrentChart() {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 900;
-  padding: 0 9px;
+  padding: 0 8px;
   white-space: nowrap;
 }
 
@@ -419,7 +422,7 @@ function analyzeCurrentChart() {
 }
 
 .mini-periods button {
-  height: 26px;
+  height: 28px;
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.03);
@@ -439,7 +442,7 @@ function analyzeCurrentChart() {
 
 .chart-wrap {
   position: relative;
-  height: calc(100% - 77px);
+  height: calc(100% - 74px);
   min-height: 360px;
   overflow: hidden;
   background:
@@ -453,7 +456,7 @@ function analyzeCurrentChart() {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 28px;
+  min-height: 26px;
   padding: 0 12px;
   border-top: 1px solid rgba(212, 175, 55, 0.08);
   border-bottom: 1px solid rgba(212, 175, 55, 0.08);
@@ -463,6 +466,10 @@ function analyzeCurrentChart() {
   font-weight: 800;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.chart-panel:not(:has(.market-range-strip)) .chart-wrap {
+  height: calc(100% - 46px);
 }
 
 .range-warning {

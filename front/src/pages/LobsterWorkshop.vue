@@ -937,8 +937,8 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 }
 
 .workshop-layout {
-  grid-template-columns: 244px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 214px minmax(0, 1fr);
+  gap: 12px;
 }
 
 .session-panel {
@@ -956,9 +956,9 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 
 .new-session {
   width: 100%;
-  height: 38px;
+  height: 34px;
   border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 10px;
+  border-radius: 9px;
   background: rgba(212, 175, 55, 0.08);
   color: var(--gold);
   cursor: pointer;
@@ -968,10 +968,10 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 .session-list {
   display: grid;
   align-content: start;
-  gap: 4px;
+  gap: 3px;
   min-height: 0;
   overflow-y: auto;
-  padding: 10px;
+  padding: 8px;
 }
 
 .session-row {
@@ -995,13 +995,13 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
   background: transparent;
   color: var(--text-main);
   cursor: pointer;
-  padding: 10px;
+  padding: 8px;
   text-align: left;
 }
 
 .session-list strong {
   overflow: hidden;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1046,12 +1046,12 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 
 .workshop-main {
   display: grid;
-  grid-template-rows: auto auto auto minmax(420px, 1fr) auto auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
   min-width: 0;
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  max-width: 1180px;
+  max-width: 1120px;
   margin: 0 auto;
   width: 100%;
 }
@@ -1069,7 +1069,7 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
   grid-template-columns: minmax(0, 1fr) auto;
   justify-items: start;
   gap: 3px 12px;
-  max-width: 1040px;
+  max-width: 960px;
   width: calc(100% - 32px);
   margin: 0 auto;
   padding: 6px 0 4px;
@@ -1077,7 +1077,7 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 }
 
 .workshop-main.started .workshop-hero h1 {
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .workshop-main.started .workshop-hero p {
@@ -1104,7 +1104,7 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
   display: grid;
   justify-items: center;
   gap: 8px;
-  padding: 14px 16px 10px;
+  padding: 8px 16px 8px;
   text-align: center;
 }
 
@@ -1112,7 +1112,7 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
   margin: 0;
   color: var(--text-main);
   font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(22px, 2.7vw, 31px);
   letter-spacing: 0;
 }
 
@@ -1184,13 +1184,13 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 
 .quick-template-row button {
   flex: 0 0 auto;
-  min-height: 36px;
+  min-height: 32px;
   border: 1px solid rgba(212, 175, 55, 0.12);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.028);
   color: var(--text-main);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   padding: 0 14px;
 }
 
@@ -1227,7 +1227,7 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 }
 
 .workshop-main .chat-stream {
-  max-width: 1040px;
+  max-width: 960px;
   width: calc(100% - 32px);
   margin: 0 auto;
   min-height: 0;
@@ -1238,14 +1238,17 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 52px),
     rgba(8, 8, 12, 0.72);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 18px 70px rgba(0, 0, 0, 0.2);
 }
 
 .chat-code-card {
   display: grid;
   gap: 10px;
   border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 14px;
-  background: rgba(212, 175, 55, 0.045);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(100, 210, 255, 0.025)),
+    rgba(10, 10, 13, 0.78);
   padding: 12px;
 }
 
@@ -1294,22 +1297,22 @@ watch(hasStarted, scrollChatToBottom, { flush: "post" });
 .workshop-main .chat-input-row {
   align-self: end;
   align-items: center;
-  max-width: 760px;
+  max-width: 780px;
   width: calc(100% - 32px);
-  margin: 8px auto 12px;
-  grid-template-columns: minmax(0, 1fr) 88px 88px;
+  margin: 8px auto 10px;
+  grid-template-columns: minmax(0, 1fr) 82px 82px;
   border: 1px solid rgba(212, 175, 55, 0.12);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.025);
   padding: 8px;
-  max-height: 58px;
-  min-height: 54px;
+  max-height: 54px;
+  min-height: 52px;
 }
 
 .workshop-main .chat-input-row .terminal-input,
 .workshop-main .chat-input-row .terminal-button {
-  height: 38px;
-  min-height: 38px;
+  height: 36px;
+  min-height: 36px;
 }
 
 .workshop-main .chat-input-row .terminal-button {

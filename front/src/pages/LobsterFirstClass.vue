@@ -304,7 +304,7 @@ onMounted(async () => {
 .square-toolbar {
   justify-content: space-between;
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-  padding: 12px 14px;
+  padding: 10px 14px;
 }
 
 .search-box {
@@ -343,15 +343,15 @@ onMounted(async () => {
 
 .filter-bar {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   overflow-x: auto;
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 
 .filter-bar button {
   flex: 0 0 auto;
-  height: 30px;
+  height: 28px;
   border: 1px solid rgba(212, 175, 55, 0.14);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.03);
@@ -372,11 +372,11 @@ onMounted(async () => {
 
 .square-body {
   display: grid;
-  grid-template-columns: minmax(520px, 820px) 380px;
-  gap: 16px;
-  max-width: 1280px;
+  grid-template-columns: minmax(500px, 760px) 360px;
+  gap: 14px;
+  max-width: 1210px;
   margin: 0 auto;
-  padding: 14px;
+  padding: 12px 14px 16px;
 }
 
 .strategy-feed {
@@ -384,16 +384,18 @@ onMounted(async () => {
   grid-template-columns: 1fr;
   align-content: start;
   max-height: calc(100vh - 230px);
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
 }
 
 .community-card,
 .comment-card {
   border: 1px solid rgba(212, 175, 55, 0.1);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.024);
-  padding: 14px;
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.018);
+  padding: 12px;
 }
 
 .community-card {
@@ -404,7 +406,9 @@ onMounted(async () => {
 .community-card:hover,
 .community-card.active {
   border-color: rgba(212, 175, 55, 0.5);
-  background: rgba(212, 175, 55, 0.08);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(100, 210, 255, 0.028)),
+    rgba(255, 255, 255, 0.024);
 }
 
 .card-head,
@@ -419,14 +423,14 @@ onMounted(async () => {
 
 .metric-strip {
   justify-content: flex-start;
-  gap: 18px;
-  margin-top: 12px;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .meta-strip {
   justify-content: flex-start;
-  gap: 14px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .card-head strong,
@@ -474,12 +478,14 @@ onMounted(async () => {
 .detail-panel {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 10px;
   max-height: calc(100vh - 230px);
   overflow-y: auto;
   border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.01)),
+    rgba(0, 0, 0, 0.16);
   padding: 12px;
 }
 
@@ -511,9 +517,9 @@ onMounted(async () => {
 .rule-box,
 .comments-box {
   border: 1px solid rgba(212, 175, 55, 0.11);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.025);
-  padding: 12px;
+  padding: 10px;
 }
 
 .detail-grid span {

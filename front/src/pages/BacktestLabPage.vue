@@ -239,8 +239,8 @@ onMounted(async () => {
 
 .lab-layout {
   display: grid;
-  grid-template-columns: 224px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 206px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
   min-height: 0;
 }
@@ -258,8 +258,8 @@ onMounted(async () => {
 .run-list-body,
 .lab-main {
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 9px;
 }
 
 .run-list-body {
@@ -286,8 +286,8 @@ onMounted(async () => {
 
 .curve-analysis-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 10px;
   align-items: stretch;
 }
 
@@ -307,20 +307,23 @@ onMounted(async () => {
   display: grid;
   gap: 4px;
   width: 100%;
-  border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.014)),
+    rgba(255, 255, 255, 0.018);
   color: var(--text-muted);
   cursor: pointer;
-  padding: 9px;
+  padding: 9px 10px;
   text-align: left;
-  transition: border-color 0.16s ease, background 0.16s ease;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
 
 .run-card.active,
 .run-card:hover {
   border-color: rgba(212, 175, 55, 0.48);
   background: rgba(212, 175, 55, 0.08);
+  transform: translateY(-1px);
 }
 
 .run-card-top {

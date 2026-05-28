@@ -52,10 +52,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .radar-grid {
-  grid-template-columns: 210px minmax(520px, 1fr) 300px;
+  grid-template-columns: 188px minmax(640px, 1fr) 282px;
   align-items: stretch;
   min-height: 0;
-  height: calc(100dvh - 78px);
+  height: calc(100dvh - 74px);
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -66,14 +67,14 @@ onBeforeUnmount(() => {
 
 .radar-grid .terminal-column:nth-child(2) {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 136px;
+  grid-template-rows: auto minmax(0, 1fr) 112px;
   min-height: 0;
   overflow: visible;
 }
 
 .radar-bottom-strip {
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
   gap: 10px;
   min-height: 0;
 }
@@ -92,14 +93,14 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
   overflow: visible;
-  padding: 10px;
+  padding: 8px;
   background:
     linear-gradient(135deg, rgba(100, 210, 255, 0.08), transparent 45%),
     linear-gradient(145deg, rgba(18, 17, 21, 0.96), rgba(6, 6, 8, 0.84));
 }
 
 .radar-page :deep(.pool-panel) {
-  flex: 0 0 320px;
+  flex: 0 0 300px;
 }
 
 .radar-page :deep(.news-panel) {
@@ -107,16 +108,21 @@ onBeforeUnmount(() => {
   min-height: 220px;
 }
 
+.radar-page :deep(.panel-header) {
+  min-height: 38px;
+  padding: 9px 10px;
+}
+
 .radar-page :deep(.pool-body),
 .radar-page :deep(.news-list),
 .radar-page :deep(.market-news-list) {
-  padding: 8px;
+  padding: 7px;
 }
 
 .radar-page :deep(.stock-row) {
-  grid-template-columns: minmax(64px, 1fr) 72px 44px 22px;
+  grid-template-columns: minmax(62px, 1fr) 68px 42px 20px;
   gap: 5px;
-  padding: 6px;
+  padding: 6px 5px;
 }
 
 .radar-page :deep(.stock-row span:nth-child(4)),
@@ -144,8 +150,8 @@ onBeforeUnmount(() => {
 
 .radar-page :deep(.snapshot-grid) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  padding: 8px;
+  gap: 5px;
+  padding: 7px;
 }
 
 .radar-page :deep(.hero-price) {
@@ -153,7 +159,7 @@ onBeforeUnmount(() => {
 }
 
 .radar-page :deep(.hero-price strong) {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 @media (max-width: 1180px) {
