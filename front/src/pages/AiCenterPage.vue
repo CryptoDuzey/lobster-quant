@@ -172,7 +172,7 @@ onMounted(() => {
       <div>
         <span class="terminal-chip">能力与设置合并入口</span>
         <h1>AI 能力中心</h1>
-        <p>这里统一管理模型 Key、Agent、Skill、GitHub Skill 和外部工具 Token。正常用户只需要先配置 DeepSeek，然后就可以在行情和工坊里对话。</p>
+        <p>这里统一管理模型 Key、Agent、Skill、GitHub Skill 和外部工具 Token。正常用户只需要先配置一个可用模型，比如 DeepSeek、OpenAI、Claude 或 Kimi，就可以在行情和工坊里对话。</p>
       </div>
       <button class="terminal-button primary" :disabled="loading" @click="loadCapabilities">
         <BrainCircuit v-if="!loading" :size="15" />

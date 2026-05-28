@@ -203,7 +203,7 @@ class StrategyGenerationAgent(BaseAgent):
             "safety_check": safety_check,
             "source": source,
             "provider_configured": bool(self.provider.available),
-            "notice": "" if llm_strategy else "DeepSeek 未配置或本次调用失败，当前使用本地规则解析 Agent。",
+            "notice": "" if llm_strategy else "模型 API Key 未配置或本次调用失败，当前使用本地规则解析 Agent。",
         }
         self.log("strategy_generate", payload, {"strategy_name": result["strategy_name"], "safety_check": safety_check})
         return result

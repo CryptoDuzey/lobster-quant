@@ -181,7 +181,7 @@ def test_model_provider(payload: ProviderPayload, user: dict[str, Any] | None = 
     if payload.provider != "deepseek":
         return {"success": False, "message": "该供应商已预留配置入口，当前版本暂未接入真实测试。"}
     if not api_key:
-        return {"success": False, "message": "DeepSeek API Key 未配置。"}
+        return {"success": False, "message": "当前模型供应商 API Key 未配置。"}
     try:
         response = requests.post(
             "https://api.deepseek.com/chat/completions",
@@ -196,7 +196,7 @@ def test_model_provider(payload: ProviderPayload, user: dict[str, Any] | None = 
         )
         if response.status_code >= 400:
             return {"success": False, "message": f"连接失败：{response.status_code}"}
-        return {"success": True, "message": "DeepSeek 连接正常。"}
+        return {"success": True, "message": "当前供应商连接正常。"}
     except Exception as exc:
         return {"success": False, "message": f"连接失败：{exc}"}
 

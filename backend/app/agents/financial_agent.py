@@ -83,7 +83,7 @@ class FinancialAgent(BaseAgent):
             except Exception as exc:
                 message = f"金融 Agent 调用模型失败：{exc}"
         else:
-            message = "DeepSeek 尚未配置，金融 Agent 只能做基础规则说明，不能进行真实模型对话。"
+            message = "模型 API Key 尚未配置，金融 Agent 只能做基础规则说明，不能进行真实模型对话。你可以在能力中心配置 DeepSeek、OpenAI、Claude、Kimi 等模型。"
 
         result = {
             "success": False,

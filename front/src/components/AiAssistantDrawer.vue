@@ -20,10 +20,10 @@ const isMarketMode = computed(() => store.state.activeAssistantMode === "market"
 const modeText = computed(() => {
   if (isMarketMode.value) {
     if (!store.state.agentCommittee) return "等待提问";
-    return store.state.agentCommittee.provider_configured ? "DeepSeek + 行情Agent" : "模型未配置";
+    return store.state.agentCommittee.provider_configured ? "当前模型 + 行情Agent" : "模型 API Key 未配置";
   }
   if (!store.state.financialAgentResult) return "金融Agent待命";
-  return store.state.financialAgentResult.provider_configured ? "DeepSeek + 金融Agent" : "模型未配置";
+  return store.state.financialAgentResult.provider_configured ? "当前模型 + 金融Agent" : "模型 API Key 未配置";
 });
 
 const basisText = computed(() => {

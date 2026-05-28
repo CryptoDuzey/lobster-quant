@@ -64,7 +64,7 @@ class DeepSeekProvider(LLMProvider):
         timeout: int = 45,
     ) -> LLMResponse:
         if not self.api_key:
-            raise RuntimeError("DeepSeek API Key 未配置")
+            raise RuntimeError("模型 API Key 未配置（当前供应商：DeepSeek）")
         payload: dict[str, Any] = {
             "model": self.model,
             "temperature": temperature,

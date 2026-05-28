@@ -245,7 +245,7 @@ function translateError(message = "") {
     return "后端服务未启动，请确认 FastAPI 已运行在 127.0.0.1:8000";
   }
   if (text.includes("missing") && text.includes("KEY")) {
-    return "DeepSeek API Key 未配置，请检查后端 .env 文件";
+    return "模型 API Key 未配置，请在能力中心配置当前模型供应商的 Key，或检查后端环境变量。";
   }
   if (text.includes("timeout") || text.includes("超时")) {
     return "网络请求超时，请稍后重试";

@@ -433,7 +433,7 @@ def _investment_knowledge_chat(request: StrategyChatRequest) -> dict[str, Any]:
         except Exception as exc:
             message = f"模型调用失败：{exc}"
     else:
-        message = "我可以先回答投资人物和策略思想，但当前 DeepSeek 未配置，回答会比较基础。你配置 Key 后，我会用模型结合上下文继续分析。"
+        message = "我可以先回答投资人物和策略思想，但当前模型 API Key 未配置，回答会比较基础。你配置 DeepSeek、OpenAI、Claude、Kimi 等模型 Key 后，我会用模型结合上下文继续分析。"
     return {
         "complete": False,
         "conversation_only": True,
@@ -1544,7 +1544,7 @@ def _general_strategy_chat(request: StrategyChatRequest) -> dict[str, Any]:
         "message": (
             "你好，我是龙虾量化的 AI 策略工坊助手。"
             "我可以帮你把 A 股交易想法整理成完整策略、生成 rqalpha 回测代码，并把结果送到回测实验室。"
-            "当前 DeepSeek API Key 未配置，所以只能做基础引导；配置模型后可以进行完整对话和策略生成。"
+            "当前模型 API Key 未配置，所以只能做基础引导；在能力中心配置 DeepSeek、OpenAI、Claude、Kimi 等模型后，可以进行完整对话和策略生成。"
         ),
         "provider_configured": False,
         "agent_source": "local_identity",

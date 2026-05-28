@@ -19,7 +19,7 @@ const suggestions = computed(() => store.state.aiAudit?.suggestions || []);
     <div class="debate-body">
       <div class="agent-lane">
         <div class="agent-name risk">风险审计</div>
-        <p v-if="!risks.length">等待 DeepSeek 风险审计</p>
+        <p v-if="!risks.length">等待模型风险审计</p>
         <p v-for="risk in risks" :key="risk">{{ risk }}</p>
       </div>
       <div class="agent-lane">

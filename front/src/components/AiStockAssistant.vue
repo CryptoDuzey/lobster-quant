@@ -7,7 +7,7 @@ const store = useMarketStore();
 
 const modelState = computed(() => {
   if (!store.state.agentCommittee) return "等待调用";
-  return store.state.agentCommittee.provider_configured ? "DeepSeek 已连接" : "DeepSeek 未配置";
+  return store.state.agentCommittee.provider_configured ? "当前模型已连接" : "模型 API Key 未配置";
 });
 
 function openAssistant() {

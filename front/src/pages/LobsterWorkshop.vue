@@ -70,9 +70,13 @@ const templates = [
   },
 ];
 
-const deepseek = computed(() => (agentInfo.value.providers || []).find((item) => item.name === "deepseek"));
-const agentReady = computed(() => Boolean(deepseek.value?.enabled));
-const agentStatusText = computed(() => (agentReady.value ? "DeepSeek 已连接" : "DeepSeek 未配置，请先在能力中心或设置里保存 API Key"));
+const activeProvider = computed(() => (agentInfo.value.providers || []).find((item) => item.enabled));
+const agentReady = computed(() => Boolean(activeProvider.value));
+const agentStatusText = computed(() => (
+  agentReady.value
+    ? `${providerDisplayName(activeProvider.value?.name)} 已连接`
+    : "模型 API Key 未配置，请先在能力中心配置 DeepSeek / OpenAI / Claude / Kimi 等模型 Key"
+));
 const hasStarted = computed(() => chatMessages.value.length > 1 || Boolean(store.state.strategyJson) || Boolean(store.state.generatedCode));
 
 const activeStrategyName = computed(() => store.state.strategyJson?.strategy_name || "等待生成策略");
@@ -127,6 +131,18 @@ function createSession(title = "新建策略会话") {
     messages: null,
     slots: {},
   };
+}
+
+function providerDisplayName(name = "") {
+  const map = {
+    deepseek: "DeepSeek",
+    openai: "OpenAI",
+    claude: "Claude",
+    kimi: "Kimi",
+    qwen: "通义千问",
+    local: "本地模型",
+  };
+  return map[String(name).toLowerCase()] || "当前模型";
 }
 
 function newSession() {
@@ -328,7 +344,7 @@ async function submitStrategyIdea(content, { useDefaults = false, runAfterComple
     scrollChatToBottom();
     requestMessages = [...sanitizedMessages(chatMessages.value.slice(0, -1)), { role: "user", content }];
     store.state.strategyInput = visibleContent;
-    touchSession(visibleContent.includes("****") ? "配置 DeepSeek API Key" : visibleContent);
+    touchSession(visibleContent.includes("****") ? "配置模型 API Key" : visibleContent);
   } else if (!useDefaults) {
     chatMessages.value.push({ role: "assistant", content: "请先描述策略，或者点击“使用默认配置补全”。" });
     return null;
@@ -344,7 +360,7 @@ async function submitStrategyIdea(content, { useDefaults = false, runAfterComple
     chatSlots.value = result.slots || {};
     applySlots(chatSlots.value);
 
-    const sourceNote = result.provider_configured === false ? "\n当前未配置 DeepSeek，系统只做了本地规则补全；配置并测试 Key 后会先调用真实模型理解策略。" : "";
+    const sourceNote = result.provider_configured === false ? "\n当前没有可用模型 API Key，系统只做了本地规则补全；配置并测试 DeepSeek / OpenAI / Claude / Kimi 等模型 Key 后，会先调用真实模型理解策略。" : "";
     chatMessages.value.push({
       role: "assistant",
       content: result.conversation_only

@@ -238,7 +238,7 @@ def _local_stock_search(query: str, limit: int) -> dict[str, Any]:
         "query": query,
         "items": list(dedup.values())[:limit],
         "source": "本地语义候选",
-        "notice": "DeepSeek 未配置时使用本地主题候选，不代表投资建议。",
+        "notice": "模型 API Key 未配置时使用本地主题候选，不代表投资建议。",
     }
 
 
@@ -280,7 +280,7 @@ def _local_stock_analysis(request: StockAnalysisRequest) -> dict[str, Any]:
         "summary": summary,
         "basis": [
             "依据当前行情快照、最近K线和消息数量做本地快速分析。",
-            "配置 DeepSeek 后，将生成更完整的中文投研分析。",
+            "配置可用模型 Key 后，将生成更完整的中文投研分析。",
         ],
         "risks": ["样本窗口较短，分钟级波动容易受盘口噪声影响。", "消息面可能存在滞后或缺失。"],
         "suggestions": ["关注是否有效突破前高。", "避免仅凭单一消息或单根K线追涨。"],
@@ -320,7 +320,7 @@ def _fallback_strategy(request: StrategyRequest) -> dict[str, Any]:
             "atr_window": 14,
             "max_drawdown_limit": 0.08,
         },
-        "explanation": "DeepSeek 未配置时，系统使用本地安全模板完成结构化。该策略仅用于跑通流程，正式投研请配置 DEEPSEEK_API_KEY。",
+        "explanation": "模型 API Key 未配置时，系统使用本地安全模板完成结构化。该策略仅用于跑通流程，正式投研请配置可用模型 Key。",
         "source": "本地结构化兜底",
     }
 
@@ -495,7 +495,7 @@ def stock_analysis(request: StockAnalysisRequest) -> dict[str, Any]:
 def debug_strategy(request: StrategyDebugRequest) -> dict[str, Any]:
     if not deepseek_key(required=False):
         return {
-            "diagnosis": "DeepSeek API Key 未配置，系统只能记录错误，无法自动修复代码。",
+            "diagnosis": "模型 API Key 未配置，系统只能记录错误，无法自动修复代码。",
             "fixed_code": request.generated_code,
             "fix_summary": "请检查后端 .env 中的 DEEPSEEK_API_KEY，或先使用结构化规则回测。",
             "source": "本地提示",

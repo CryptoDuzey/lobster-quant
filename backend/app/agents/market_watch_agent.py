@@ -194,7 +194,7 @@ class MarketWatchAgent(BaseAgent):
                 }
             except Exception as exc:
                 return {
-                    "text": f"已调用 {', '.join(labels)}，但 DeepSeek 汇总失败：{exc}",
+                    "text": f"已调用 {', '.join(labels)}，但模型汇总失败：{exc}",
                     "confidence": 0.2,
                     "provider_configured": True,
                     "source": "DeepSeek",
@@ -266,7 +266,7 @@ class MarketWatchAgent(BaseAgent):
         }
         if not self._complete_with_llm(payload, result):
             result["success"] = False
-            result["message"] = result.get("provider_error") or "DeepSeek API Key 未配置，无法生成真实 AI 回答。"
+            result["message"] = result.get("provider_error") or "模型 API Key 未配置，无法生成真实 AI 回答。"
             result["answer"] = ""
         return result
 
@@ -396,7 +396,7 @@ class MarketWatchAgent(BaseAgent):
                     "symbol": payload.get("symbol"),
                     "name": payload.get("name", ""),
                     "basis": basis,
-                    "message": f"DeepSeek 调用失败：{exc}",
+                    "message": f"模型调用失败：{exc}",
                     "answer": "",
                     "provider_configured": True,
                     "source": "DeepSeek",
@@ -424,7 +424,7 @@ class MarketWatchAgent(BaseAgent):
         provider = get_llm_provider("deepseek")
         result["provider_configured"] = provider.available
         if not provider.available:
-            result["provider_error"] = "DeepSeek API Key 未配置，无法生成真实 AI 回答。"
+            result["provider_error"] = "模型 API Key 未配置，无法生成真实 AI 回答。"
             return False
         question = payload.get("question") or "请分析当前股票。"
         messages = payload.get("messages") or []

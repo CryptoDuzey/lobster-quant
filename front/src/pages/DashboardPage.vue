@@ -18,7 +18,7 @@ const providers = ref([]);
 const tools = ref([]);
 const loading = ref(false);
 
-const deepseek = computed(() => providers.value.find((item) => item.provider === "deepseek"));
+const configuredProvider = computed(() => providers.value.find((item) => item.configured));
 const sourceSummary = computed(() => dataSources.value.map((item) => `${item.display_name}${item.is_enabled ? "" : "（停用）"}`).join(" / ") || "等待检测");
 
 async function loadDashboard() {
@@ -78,8 +78,8 @@ onMounted(async () => {
       <article class="panel status-card violet">
         <Bot :size="20" />
         <span>模型状态</span>
-        <strong>{{ deepseek?.configured ? "DeepSeek 已配置" : "DeepSeek 未配置" }}</strong>
-        <p>供应商配置在设置页保存，密钥不在前端回显。</p>
+        <strong>{{ configuredProvider ? `${configuredProvider.label || configuredProvider.provider} 已配置` : "模型 API Key 未配置" }}</strong>
+        <p>可在能力中心配置 DeepSeek、OpenAI、Claude、Kimi 等模型，密钥不在前端回显。</p>
       </article>
       <article class="panel status-card">
         <Activity :size="20" />

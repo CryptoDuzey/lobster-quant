@@ -65,7 +65,7 @@ const returnClass = computed(() => {
 
       <div class="audit-card">
         <div class="metric-label">策略审计摘要</div>
-        <p v-if="store.state.loadingAI" class="muted mono">DeepSeek 正在审计策略...</p>
+        <p v-if="store.state.loadingAI" class="muted mono">模型正在审计策略...</p>
         <p v-else>{{ store.state.aiAudit?.summary || "等待回测后生成策略审计" }}</p>
       </div>
     </div>
