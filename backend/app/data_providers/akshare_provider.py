@@ -100,6 +100,10 @@ def ak_market_symbol(symbol: str) -> str:
     return f"sh{code}" if exchange == "XSHG" else f"sz{code}"
 
 
+def tencent_market_symbol(symbol: str) -> str:
+    return ak_market_symbol(symbol)
+
+
 def exchange_name(symbol: str) -> str:
     return "上交所" if normalize_symbol(symbol).endswith(".XSHG") else "深交所"
 
@@ -205,7 +209,7 @@ def _frame_to_bars(frame: pd.DataFrame, period: str) -> list[MarketBar]:
     return rows
 
 
-def _fetch_sina_minute_frame(symbol: str, period: str, timeout: int = 12) -> pd.DataFrame:
+def _fetch_sina_minute_frame(symbol: str, period: str, timeout: int = 12, datalen: int = 10000) -> pd.DataFrame:
     url = "https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketDataService.getKLineData"
     response = requests.get(
         url,
@@ -213,7 +217,7 @@ def _fetch_sina_minute_frame(symbol: str, period: str, timeout: int = 12) -> pd.
             "symbol": ak_market_symbol(symbol),
             "scale": period,
             "ma": "no",
-            "datalen": "1970",
+            "datalen": str(datalen),
         },
         timeout=timeout,
     )
@@ -223,6 +227,58 @@ def _fetch_sina_minute_frame(symbol: str, period: str, timeout: int = 12) -> pd.
     if not data:
         return pd.DataFrame()
     return pd.DataFrame(data).iloc[:, :7]
+
+
+def _fetch_eastmoney_minute_frame(symbol: str, period: str, start_date: str, end_date: str, timeout: int = 12) -> pd.DataFrame:
+    import akshare as ak
+
+    code = ak_code(symbol)
+    kwargs = {
+        "symbol": code,
+        "start_date": f"{start_date} 09:30:00",
+        "end_date": f"{end_date} 15:00:00",
+        "period": period,
+        "adjust": "",
+    }
+    try:
+        return ak.stock_zh_a_hist_min_em(**kwargs, timeout=timeout)
+    except TypeError as exc:
+        if "timeout" not in str(exc):
+            raise
+        return ak.stock_zh_a_hist_min_em(**kwargs)
+
+
+def _fetch_tencent_minute_frame(symbol: str, period: str, timeout: int = 12, datalen: int = 10000) -> pd.DataFrame:
+    market_symbol = tencent_market_symbol(symbol)
+    period_key = f"m{period}"
+    response = requests.get(
+        "https://web.ifzq.gtimg.cn/appstock/app/kline/mkline",
+        params={"param": f"{market_symbol},{period_key},,{datalen}"},
+        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"},
+        timeout=timeout,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    node = (payload.get("data") or {}).get(market_symbol) or {}
+    rows = node.get(period_key) or node.get("data") or []
+    if not rows:
+        return pd.DataFrame()
+    frame = pd.DataFrame(rows)
+    frame = frame.iloc[:, :6]
+    frame.columns = ["time", "open", "close", "high", "low", "volume"]
+    return frame
+
+
+def _coverage_score(frame: pd.DataFrame, start_date: str, end_date: str) -> tuple[int, int, int]:
+    if frame is None or frame.empty or "timestamp" not in frame.columns:
+        return (0, 0, 0)
+    requested_start = pd.to_datetime(start_date)
+    requested_end = pd.to_datetime(end_date)
+    actual_start = frame["timestamp"].min()
+    actual_end = frame["timestamp"].max()
+    start_gap = max(0, int((actual_start.normalize() - requested_start.normalize()).days))
+    end_gap = max(0, int((requested_end.normalize() - actual_end.normalize()).days))
+    return (-start_gap - end_gap, len(frame), -start_gap)
 
 
 def _eastmoney_secid(symbol: str) -> str:
@@ -358,18 +414,28 @@ class AkshareProvider:
                         )
                         source = "akshare-sina"
                 else:
-                    try:
-                        frame = _fetch_sina_minute_frame(symbol, normalized_period)
-                        source = "sina-minute"
-                    except Exception:
-                        frame = ak.stock_zh_a_hist_min_em(
-                            symbol=code,
-                            start_date=f"{start_date} 09:30:00",
-                            end_date=f"{end_date} 15:00:00",
-                            period=normalized_period,
-                            adjust="",
+                    candidates: list[tuple[pd.DataFrame, str]] = []
+                    errors: list[str] = []
+                    for fetcher_name, fetcher in (
+                        ("eastmoney-minute", lambda: _fetch_eastmoney_minute_frame(symbol, normalized_period, start_date, end_date)),
+                        ("sina-minute", lambda: _fetch_sina_minute_frame(symbol, normalized_period, datalen=10000)),
+                        ("tencent-minute", lambda: _fetch_tencent_minute_frame(symbol, normalized_period, datalen=10000)),
+                    ):
+                        try:
+                            raw_frame = fetcher()
+                            normalized_frame = _normalize_bars_frame(raw_frame, period, start_date, end_date)
+                            if not normalized_frame.empty:
+                                candidates.append((normalized_frame, fetcher_name))
+                        except Exception as exc:
+                            errors.append(f"{fetcher_name}: {exc}")
+                    if not candidates:
+                        raise EmptyMarketDataError(
+                            f"当前周期暂无真实分钟行情数据：{normalize_symbol(symbol)}；"
+                            f"已尝试 eastmoney-minute、sina-minute 与 tencent-minute。{'；'.join(errors)}"
                         )
-                        source = "akshare-eastmoney-minute"
+                    candidates.sort(key=lambda item: _coverage_score(item[0], start_date, end_date), reverse=True)
+                    frame, source = candidates[0]
+                    return _frame_to_bars(frame, period), source
         except Exception as exc:
             raise MarketDataError(f"数据源接口失败：{exc}") from exc
 

@@ -29,13 +29,14 @@ function Stop-PortProcess {
 if (Test-Path $LocalPython) {
   $Python = $LocalPython
 } else {
-  $PythonCommand = Get-Command python -ErrorAction SilentlyContinue
-  if ($PythonCommand) {
-    $Python = $PythonCommand.Source
+  $PyCommand = Get-Command py -ErrorAction SilentlyContinue
+  if ($PyCommand) {
+    $Python = $PyCommand.Source
+    $PythonLauncherVersion = "-3.12"
   } else {
-    $PyCommand = Get-Command py -ErrorAction SilentlyContinue
-    if ($PyCommand) {
-      $Python = $PyCommand.Source
+    $PythonCommand = Get-Command python -ErrorAction SilentlyContinue
+    if ($PythonCommand) {
+      $Python = $PythonCommand.Source
     }
   }
 }
@@ -68,7 +69,7 @@ $frontendOut = Join-Path $Logs "front-server.log"
 $frontendErr = Join-Path $Logs "front-server.err.log"
 
 if ((Split-Path $Python -Leaf) -ieq "py.exe") {
-  $BackendArgs = @("-3", "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "$BackendPort")
+  $BackendArgs = @($PythonLauncherVersion, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "$BackendPort")
 } else {
   $BackendArgs = @("-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "$BackendPort")
 }

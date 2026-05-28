@@ -30,6 +30,7 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 from app.backtest.backtest_validator import BacktestValidationError, BacktestValidator
 from app.backtest.benchmark_service import BenchmarkService
 from app.backtest.factor_backtester import run_factor_selection_backtest
+from app.backtest.ml_backtester import run_ml_basic_backtest
 from app.backtest.performance_metrics import (
     build_equity_curve,
     build_equity_curve_from_portfolio,
@@ -207,7 +208,8 @@ class BacktestRequest(BaseModel):
         if not isinstance(data, dict):
             return data
         params = data.get("params") or {}
-        if data.get("mode") in {"factor_selection", "stock_pool"} or (isinstance(params, dict) and params.get("strategy_mode") == "factor_selection"):
+        strategy_mode = params.get("strategy_mode") if isinstance(params, dict) else None
+        if data.get("mode") in {"factor_selection", "stock_pool", "ml_basic"} or strategy_mode in {"factor_selection", "ml_basic"}:
             data.setdefault("symbol", "000001.XSHE")
             data["buy_logic"] = "close > ma20"
             data["sell_logic"] = "close < ma20"
@@ -2521,6 +2523,12 @@ async def run_backtest(request: BacktestRequest) -> dict[str, Any]:
         validator.validate_request(request)
         if request.period == "1d":
             request.period = "day"
+        if request.mode == "ml_basic" or (request.params or {}).get("strategy_mode") == "ml_basic":
+            response = await asyncio.to_thread(run_ml_basic_backtest, request, run_started_at)
+            if response.get("success"):
+                _save_backtest_run(response)
+            return response
+
         if request.mode in {"factor_selection", "stock_pool"} or (request.params or {}).get("strategy_mode") == "factor_selection":
             response = await asyncio.to_thread(run_factor_selection_backtest, request, run_started_at)
             if response.get("success"):

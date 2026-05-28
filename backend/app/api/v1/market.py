@@ -37,6 +37,34 @@ def _data_warning(period: str, start_date: str, bars: list[Any]) -> str:
     return ""
 
 
+def _coverage_meta(period: str, start_date: str, end_date: str, bars: list[Any]) -> dict[str, Any]:
+    actual_start, actual_end = _actual_range(bars)
+    meta: dict[str, Any] = {
+        "requested_start": start_date,
+        "requested_end": end_date,
+        "actual_start": actual_start,
+        "actual_end": actual_end,
+        "bars_count": len(bars),
+        "coverage_ratio": None,
+        "is_truncated": False,
+        "precision": "daily" if period in {"day", "1d"} else "minute",
+    }
+    if not bars:
+        return meta
+    try:
+        requested_start = datetime.fromisoformat(start_date[:10])
+        requested_end = datetime.fromisoformat(end_date[:10])
+        actual_start_dt = datetime.fromisoformat(str(actual_start)[:10])
+        actual_end_dt = datetime.fromisoformat(str(actual_end)[:10])
+        requested_days = max(1, (requested_end - requested_start).days + 1)
+        actual_days = max(1, (actual_end_dt - actual_start_dt).days + 1)
+        meta["coverage_ratio"] = round(min(1, actual_days / requested_days), 4)
+        meta["is_truncated"] = actual_start_dt > requested_start + timedelta(days=14) or actual_end_dt < requested_end - timedelta(days=14)
+    except Exception:
+        pass
+    return meta
+
+
 def _http_error(exc: Exception) -> HTTPException:
     message = str(exc)
     if isinstance(exc, EmptyMarketDataError):
@@ -84,8 +112,6 @@ def _append_indicators(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _cache_covers_request(rows: list[dict[str, Any]], period: str, start_date: str, end_date: str) -> bool:
     if not rows:
         return False
-    if period not in {"day", "1d"}:
-        return len(rows) >= 2
     try:
         first = datetime.fromisoformat(str(rows[0]["time"])[:10])
         last = datetime.fromisoformat(str(rows[-1]["time"])[:10])
@@ -93,6 +119,8 @@ def _cache_covers_request(rows: list[dict[str, Any]], period: str, start_date: s
         requested_end = datetime.fromisoformat(end_date[:10])
     except Exception:
         return False
+    if period not in {"day", "1d"}:
+        return len(rows) >= 2 and last >= requested_end - timedelta(days=3)
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     effective_end = min(requested_end, today)
     return first <= requested_start + timedelta(days=10) and last >= effective_end - timedelta(days=10)
@@ -116,15 +144,12 @@ def _cached_market_payload(
     actual_start, actual_end = _actual_range(rows)
     source = rows[0].get("source") or "cache"
     data_warning = warning or _data_warning(period, start_date, rows)
+    coverage = _coverage_meta(period, start_date, end_date, rows)
     return {
         "symbol": symbol,
         "name": provider.get_name(symbol),
         "period": period,
-        "requested_start": start_date,
-        "requested_end": end_date,
-        "actual_start": actual_start,
-        "actual_end": actual_end,
-        "bars_count": len(rows),
+        **coverage,
         "data_warning": data_warning,
         "source": f"{source}_cache",
         "cache_hit": True,
@@ -177,15 +202,12 @@ def market_bars(
         rows = _bars_to_dicts(bars)
         market_cache.upsert_market_bars(normalized_symbol, period, adjust, rows, source)
         actual_start, actual_end = _actual_range(bars)
+        coverage = _coverage_meta(period, start_date, end_date, bars)
         return {
             "symbol": normalized_symbol,
             "name": provider.get_name(normalized_symbol),
             "period": period,
-            "requested_start": start_date,
-            "requested_end": end_date,
-            "actual_start": actual_start,
-            "actual_end": actual_end,
-            "bars_count": len(bars),
+            **coverage,
             "data_warning": _data_warning(period, start_date, bars),
             "source": source,
             "cache_hit": False,

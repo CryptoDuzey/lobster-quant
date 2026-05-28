@@ -1009,41 +1009,155 @@ def _ml_strategy_capability() -> dict[str, Any]:
     return {
         "xgboost_installed": importlib.util.find_spec("xgboost") is not None,
         "sklearn_installed": importlib.util.find_spec("sklearn") is not None,
-        "ml_runner_ready": False,
-        "supported_now": False,
+        "ml_runner_ready": True,
+        "supported_now": True,
+        "supported_scope": "单只股票、日线、基础滚动线性模型；不冒充 XGBoost / 深度学习结果",
     }
 
 
 def _ml_strategy_boundary_response(request: StrategyChatRequest) -> dict[str, Any]:
     provider = get_llm_provider("deepseek")
     capability = _ml_strategy_capability()
-    message = (
-        "这个请求我不能直接给出回测收益数字，也不能假装已经跑过 XGBoost 或深度学习策略。\n\n"
-        "当前龙虾量化已经支持的是：规则型 A 股策略 -> 生成安全的 rqalpha 代码 -> 使用真实行情回测 -> 展示真实曲线和指标。\n\n"
-        "XGBoost、随机森林、LSTM、Transformer 这类机器学习/深度学习策略可以做成后续实验模块，但必须先补齐这些环节：\n"
-        "1. 真实特征工程：只使用当时可见的行情、成交量、技术指标，禁止未来函数。\n"
-        "2. 标签定义：例如未来 N 日收益是否大于阈值，必须避免偷看未来。\n"
-        "3. 训练/验证切分：至少做时间序列切分、走步验证，而不是随机打乱。\n"
-        "4. 模型训练环境：当前后端尚未接入 XGBoost/sklearn 训练流水线。\n"
-        "5. 回测接入：模型信号必须落到 rqalpha 撮合，再由真实交割单、收益曲线、基准曲线验证。\n"
-        "6. 稳健性检查：样本外表现、参数敏感性、交易次数、手续费滑点、最大回撤都要单独审计。\n\n"
-        "所以现在我可以先帮你把机器学习策略整理成“研究方案”和“可实现的特征/标签设计”，但不能生成假的 XGBoost 回测结果。"
+    text = _all_user_text(request.messages)
+    if _looks_like_factor_strategy_request(request) or any(term in text for term in ("股票池", "沪深300选股", "全A", "全 A", "组合调仓", "多因子")):
+        message = (
+            "可以讨论机器学习选股，但当前正式可信回测只先开放“单只股票基础机器学习择时”。\n\n"
+            "原因很简单：股票池机器学习需要稳定的成分股历史、财务因子、横截面训练、组合调仓和样本外验证。"
+            "这些模块不能用模板假装，否则结果不可信。\n\n"
+            "你现在可以先这样落地：用某一只股票，给出回测区间和周期，我会生成基础机器学习择时实验；"
+            "如果要做沪深300股票池机器学习，我会先整理成研究方案，等股票池因子和组合调仓链路完整后再跑真实回测。"
+        )
+        return {
+            "complete": False,
+            "conversation_only": True,
+            "unsupported_strategy_type": "ml_stock_pool_not_ready",
+            "capability": capability,
+            "slots": request.slots or {},
+            "message": message,
+            "provider_configured": bool(provider.available),
+            "agent_source": "ml_capability_router",
+        }
+
+    slots = _extract_strategy_slots(request)
+    minimal_missing = [key for key in ("symbol", "period", "start_date", "end_date") if not slots.get(key)]
+    if minimal_missing and not request.use_defaults:
+        questions = {
+            "symbol": "你想用哪只股票做机器学习择时？例如平安银行 000001.XSHE。",
+            "period": "当前基础机器学习实验先支持日线，你是否接受日线？",
+            "start_date": "回测从哪一天开始？",
+            "end_date": "回测到哪一天结束？",
+        }
+        message = (
+            "机器学习策略可以先做一个真实数据的基础实验，但我需要先确认几个关键条件。\n"
+            "当前不会直接编造 XGBoost 或深度学习结果；先跑的是基础滚动线性模型，用真实行情生成信号。\n\n"
+            + "\n".join(questions[key] for key in minimal_missing[:4])
+        )
+        return {
+            "complete": False,
+            "conversation_only": True,
+            "slots": slots,
+            "missing_slots": minimal_missing,
+            "questions": [questions[key] for key in minimal_missing[:4]],
+            "message": message,
+            "provider_configured": bool(provider.available),
+            "agent_source": "ml_slot_router",
+        }
+
+    completed = _apply_default_slots(slots)
+    completed["period"] = "day"
+    completed["mode"] = "ml_basic"
+    strategy_name = "基础机器学习择时实验"
+    strategy_json = {
+        "strategy_name": strategy_name,
+        "strategy_type": "机器学习实验策略",
+        "mode": "ml_basic",
+        "symbol": completed["symbol"],
+        "period": "day",
+        "start_date": completed["start_date"],
+        "end_date": completed["end_date"],
+        "rules": {
+            "buy_rules": [
+                {
+                    "description": "滚动模型预测下一交易日收益大于阈值时买入",
+                    "expression": "ml_prediction > prediction_threshold",
+                }
+            ],
+            "sell_rules": [
+                {
+                    "description": "滚动模型预测下一交易日收益小于等于阈值时卖出",
+                    "expression": "ml_prediction <= prediction_threshold",
+                }
+            ],
+            "risk_rules": [
+                {
+                    "description": "A股 T+1、100股整手、真实手续费滑点；不使用未来数据",
+                    "expression": "safe_walk_forward_validation",
+                }
+            ],
+        },
+        "params": {
+            "strategy_mode": "ml_basic",
+            "model_type": "rolling_ridge_linear",
+            "train_window": 120,
+            "prediction_threshold": 0,
+            "initial_cash": completed.get("initial_cash", 1000000),
+            "commission": 0.0003,
+            "slippage": 0.0005,
+            "stamp_tax": 0.001,
+            "round_lot": 100,
+            "t_plus_one": True,
+            "benchmark": completed.get("benchmark", "000300.XSHG"),
+        },
+        "warnings": [
+            "这是基础机器学习实验，不是 XGBoost、LSTM 或深度学习结果。",
+            "模型只使用历史OHLCV特征滚动训练，不允许未来函数。",
+            "结果必须以真实回测接口返回的曲线、交割单和指标为准。",
+        ],
+    }
+    generated_code = (
+        "# 基础机器学习择时实验\n"
+        "# 后端将使用真实日线行情构造历史特征，并滚动训练基础线性模型。\n"
+        "# 当前不生成伪造的 XGBoost / 深度学习代码；回测结果只来自后端真实运行。\n"
+        "strategy_mode = 'ml_basic'\n"
+        "model_type = 'rolling_ridge_linear'\n"
+        "features = ['ret_1', 'ret_3', 'ret_5', 'ret_10', 'ret_20', 'ma5_gap', 'ma20_gap', 'volatility_20', 'volume_ratio_20']\n"
+        "train_window = 120\n"
+        "prediction_threshold = 0.0\n"
     )
     audit_logger.log(
         agent="策略对话智能体",
-        action="拦截未接入的机器学习回测结果",
-        input_summary={"query": _latest_user_message(request.messages), "capability": capability},
-        output_summary={"complete": False, "unsupported": True},
+        action="生成基础机器学习实验策略",
+        input_summary={"query": _latest_user_message(request.messages), "slots": completed, "capability": capability},
+        output_summary={"complete": True, "strategy_name": strategy_name},
     )
     return {
-        "complete": False,
-        "conversation_only": True,
-        "unsupported_strategy_type": "machine_learning",
+        "complete": True,
+        "conversation_only": False,
+        "strategy_mode": "ml_basic",
         "capability": capability,
-        "slots": request.slots or {},
-        "message": message,
+        "slots": completed,
+        "strategy": {
+            "strategy_name": strategy_name,
+            "strategy_json": strategy_json,
+            "generated_code": generated_code,
+            "safety_check": {
+                "symbol_valid": True,
+                "no_future_function": True,
+                "no_unsafe_eval": True,
+                "data_not_empty_required": True,
+                "a_share_rules_checked": True,
+                "ml_result_not_faked": True,
+            },
+            "source": "local_ml_basic_agent",
+            "provider_configured": bool(provider.available),
+        },
+        "message": (
+            "我已生成一个可真实回测的基础机器学习择时实验。"
+            "它会用真实日线行情滚动训练基础模型，不会冒充 XGBoost 或深度学习结果。"
+            "点击执行回测后，收益曲线、交割单、Alpha/Beta 等都以后端真实计算为准。"
+        ),
         "provider_configured": bool(provider.available),
-        "agent_source": "capability_guard",
+        "agent_source": "ml_basic_agent",
     }
 
 

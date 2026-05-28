@@ -23,6 +23,7 @@ const WATCHLIST_KEY = "lobster_quant_watchlist";
 const QUOTE_INTERVAL = 3000;
 const BAR_INTERVAL = 5000;
 const NEWS_INTERVAL = 30000;
+const TODAY = new Date().toISOString().slice(0, 10);
 
 const DEFAULT_POOLS = [
   {
@@ -131,8 +132,8 @@ const state = reactive({
   symbol: "000001.XSHE",
   stockName: "平安银行",
   period: "day",
-  startDate: "2025-01-01",
-  endDate: "2026-05-23",
+  startDate: "2021-01-01",
+  endDate: TODAY,
 
   quote: null,
   bars: [],
@@ -154,6 +155,9 @@ const state = reactive({
   marketActualStart: "",
   marketActualEnd: "",
   marketBarsCount: 0,
+  marketCoverageRatio: null,
+  marketIsTruncated: false,
+  marketPrecision: "",
   marketDataWarning: "",
 
   logs: [],
@@ -378,6 +382,9 @@ function updateMarketMeta(meta = {}) {
   state.marketActualStart = meta.actual_start || state.marketActualStart;
   state.marketActualEnd = meta.actual_end || state.marketActualEnd;
   state.marketBarsCount = meta.bars_count ?? state.marketBarsCount;
+  state.marketCoverageRatio = meta.coverage_ratio ?? state.marketCoverageRatio;
+  state.marketIsTruncated = Boolean(meta.is_truncated);
+  state.marketPrecision = meta.precision || state.marketPrecision;
   state.marketDataWarning = meta.data_warning || "";
   if (meta.name) state.stockName = meta.name;
 }

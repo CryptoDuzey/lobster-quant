@@ -91,6 +91,9 @@ export async function getMarketBarsPayload(params, options = {}) {
       actual_start: payload?.actual_start || "",
       actual_end: payload?.actual_end || "",
       bars_count: numberOrNull(payload?.bars_count),
+      coverage_ratio: numberOrNull(payload?.coverage_ratio),
+      is_truncated: Boolean(payload?.is_truncated),
+      precision: payload?.precision || "",
       data_warning: payload?.data_warning || "",
     },
   };
