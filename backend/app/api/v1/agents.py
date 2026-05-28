@@ -44,6 +44,19 @@ ML_STRATEGY_KEYWORDS = (
     "catboost",
     "强化学习",
 )
+ADVANCED_ML_KEYWORDS = (
+    "xgboost",
+    "xgb",
+    "深度学习",
+    "神经网络",
+    "lstm",
+    "transformer",
+    "random forest",
+    "随机森林",
+    "lightgbm",
+    "catboost",
+    "强化学习",
+)
 FACTOR_STRATEGY_KEYWORDS = (
     "因子",
     "多因子",
@@ -1019,6 +1032,27 @@ def _ml_strategy_boundary_response(request: StrategyChatRequest) -> dict[str, An
     provider = get_llm_provider("deepseek")
     capability = _ml_strategy_capability()
     text = _all_user_text(request.messages)
+    lowered = text.lower()
+    if any(term in lowered or term in text for term in ADVANCED_ML_KEYWORDS):
+        message = (
+            "这个请求点名了 XGBoost / 深度学习这类高级机器学习模型，我现在不能把它包装成已经可正式回测的策略。\n\n"
+            "当前已稳定开放的是“单只股票、日线、基础滚动线性模型”的真实行情实验；"
+            "XGBoost、LSTM、Transformer 等需要先接入训练数据集、样本外验证、特征版本管理和模型保存流程，"
+            "否则很容易做出看起来很漂亮但不可信的结果。\n\n"
+            "如果你愿意先做可信的第一步，可以改成："
+            "“用平安银行，2025.1.1 到 2026.4.30，日线，做基础机器学习择时实验”。"
+        )
+        return {
+            "complete": False,
+            "conversation_only": True,
+            "unsupported_strategy_type": "machine_learning",
+            "capability": capability,
+            "slots": request.slots or {},
+            "message": message,
+            "provider_configured": bool(provider.available),
+            "agent_source": "ml_capability_router",
+        }
+
     if _looks_like_factor_strategy_request(request) or any(term in text for term in ("股票池", "沪深300选股", "全A", "全 A", "组合调仓", "多因子")):
         message = (
             "可以讨论机器学习选股，但当前正式可信回测只先开放“单只股票基础机器学习择时”。\n\n"

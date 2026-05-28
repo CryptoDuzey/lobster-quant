@@ -220,6 +220,17 @@ def init_database() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS agent_audit_logs (
+                id TEXT PRIMARY KEY,
+                time TEXT NOT NULL,
+                agent TEXT NOT NULL,
+                action TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'success',
+                permissions TEXT NOT NULL DEFAULT '[]',
+                input_summary TEXT NOT NULL DEFAULT '{}',
+                output_summary TEXT NOT NULL DEFAULT '{}'
+            );
+
             CREATE TABLE IF NOT EXISTS data_source_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 source_name TEXT NOT NULL UNIQUE,
