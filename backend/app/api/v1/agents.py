@@ -1597,9 +1597,28 @@ def _extract_execution_time(text: str) -> str | None:
         return _normalize_clock(match.group(1), match.group(2), match.group(3))
     if "开盘后一分钟" in text or "开盘一分钟" in text or "开盘 1 分钟" in text or "开盘1分钟" in text:
         return "09:31:00"
-    if "开盘" in text and ("交易" in text or "买入" in text or "卖出" in text or "执行" in text):
+    explicit_open = (
+        "开盘调仓",
+        "开盘交易",
+        "开盘执行",
+        "开盘买入",
+        "开盘卖出",
+        "开盘后",
+        "次日开盘",
+        "第二天开盘",
+    )
+    explicit_close = (
+        "收盘调仓",
+        "收盘交易",
+        "收盘执行",
+        "收盘买入",
+        "收盘卖出",
+        "收盘前",
+        "尾盘",
+    )
+    if any(term in text for term in explicit_open):
         return "09:31:00"
-    if "收盘" in text and ("交易" in text or "买入" in text or "卖出" in text or "执行" in text):
+    if any(term in text for term in explicit_close):
         return "15:00:00"
     return None
 

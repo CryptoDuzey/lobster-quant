@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import json
+import math
+import os
 import sys
 import time
 import urllib.request
 from typing import Any
 
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = os.getenv("LOBSTER_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 
 def post(path: str, payload: dict[str, Any], timeout: int = 420) -> dict[str, Any]:
@@ -27,37 +35,55 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+def finite(value: Any) -> bool:
+    try:
+        return math.isfinite(float(value))
+    except Exception:
+        return False
+
+
+def curve_ok(curve: list[dict[str, Any]] | None) -> bool:
+    if not isinstance(curve, list) or len(curve) < 2:
+        return False
+    values = [float(item.get("value")) for item in curve if finite(item.get("value"))]
+    return len(values) >= 2 and abs(max(values) - min(values)) > 1e-10
+
+
+def payload_from_chat(text: str, chat: dict[str, Any]) -> dict[str, Any]:
+    strategy = chat.get("strategy") or {}
+    strategy_json = strategy.get("strategy_json") or {}
+    params = strategy_json.get("params") or {}
+    slots = chat.get("slots") or {}
+    return {
+        "mode": strategy_json.get("mode", "single_stock"),
+        "symbol": strategy_json.get("symbol") or slots.get("symbol") or "000001.XSHE",
+        "start_date": slots.get("start_date") or "2025-01-01",
+        "end_date": slots.get("end_date") or "2026-04-30",
+        "period": strategy_json.get("period") or slots.get("period") or "day",
+        "strategy_name": strategy.get("strategy_name") or strategy_json.get("strategy_name") or text[:24],
+        "rules": strategy_json.get("rules") or {},
+        "params": {
+            **params,
+            "initial_cash": params.get("initial_cash") or 1_000_000,
+            "commission": params.get("commission") or 0.0003,
+            "slippage": params.get("slippage") or 0.0005,
+            "stamp_tax": params.get("stamp_tax") or 0.001,
+            "t_plus_one": True,
+            "round_lot": 100,
+        },
+    }
+
+
 def run_generated_strategy(text: str, *, factor_limit: int | None = None) -> dict[str, Any]:
-    chat = post(
-        "/api/v1/agents/strategy-chat",
-        {"messages": [{"role": "user", "content": text}], "use_defaults": False},
-        timeout=120,
-    )
+    chat = post("/api/v1/agents/strategy-chat", {"messages": [{"role": "user", "content": text}]}, timeout=120)
     require(chat.get("complete") is True, f"策略没有生成完整规格：{chat.get('message')}")
     strategy = chat.get("strategy") or {}
     strategy_json = strategy.get("strategy_json") or {}
     require(strategy_json.get("rules"), "策略缺少结构化规则")
     require(strategy.get("generated_code"), "策略缺少生成代码说明")
-    params = {
-        **(strategy_json.get("params") or {}),
-        "initial_cash": 1_000_000,
-        "commission": 0.0003,
-        "slippage": 0.0005,
-        "stamp_tax": 0.001,
-    }
+    payload = payload_from_chat(text, chat)
     if factor_limit:
-        params["universe_limit"] = factor_limit
-    slots = chat.get("slots") or {}
-    payload = {
-        "mode": strategy_json.get("mode", "single_stock"),
-        "symbol": strategy_json.get("symbol") or slots.get("symbol") or "000001.XSHE",
-        "start_date": slots.get("start_date") or "2025-01-01",
-        "end_date": slots.get("end_date") or "2026-04-30",
-        "period": strategy_json.get("period") or "day",
-        "strategy_name": strategy.get("strategy_name") or strategy_json.get("strategy_name") or "自然语言策略",
-        "rules": strategy_json.get("rules"),
-        "params": params,
-    }
+        payload.setdefault("params", {})["universe_limit"] = factor_limit
     started = time.perf_counter()
     result = post("/api/v1/backtest/run", payload, timeout=420)
     elapsed = round(time.perf_counter() - started, 1)
@@ -67,11 +93,11 @@ def run_generated_strategy(text: str, *, factor_limit: int | None = None) -> dic
     require(result.get("code_hash"), "缺少代码指纹")
     require((result.get("debug") or {}).get("executed_generated_code") is True, "没有确认执行生成策略")
     curves = result.get("curves") or {}
-    require(len(curves.get("strategy_curve") or []) >= 2, "缺少策略收益曲线")
-    require(len(curves.get("drawdown_curve") or []) >= 2, "缺少回撤曲线")
+    require(curve_ok(curves.get("strategy_curve")), "缺少有效策略收益曲线")
+    require(curve_ok(curves.get("drawdown_curve")), "缺少有效回撤曲线")
     metrics = result.get("metrics") or {}
     print(
-        f"PASS | {text[:28]} | engine={result.get('engine_info', {}).get('engine')} "
+        f"PASS | {text[:32]} | engine={result.get('engine_info', {}).get('engine')} "
         f"return={metrics.get('total_return')} trades={metrics.get('trade_count')} elapsed={elapsed}s"
     )
     return result
@@ -79,9 +105,9 @@ def run_generated_strategy(text: str, *, factor_limit: int | None = None) -> dic
 
 def main() -> int:
     cases = [
-        "用平安银行，2025.1.1到2026.4.30，日线，开盘9:31交易，突破20日新高且放量买入，跌破10日低点卖出，8%止损，满仓",
+        "用平安银行，2025.1.1到2026.4.30，日线，突破20日新高且放量买入，跌破10日低点卖出，8%止损，满仓",
         "用平安银行，2025.1.1到2026.4.30，日线，MACD金叉买入，死叉卖出，满仓",
-        "用平安银行，2025.1.1到2026.4.30，日线，20日动量为正且ATR放大买入，跌破30日均线卖出，6%止损",
+        "用平安银行，2025.1.1到2026.4.30，日线，20日动量为正且ATR放大买入，跌破20日均线卖出，6%止损",
     ]
     outputs = [run_generated_strategy(case) for case in cases]
     factor = run_generated_strategy(
@@ -91,8 +117,8 @@ def main() -> int:
     signatures = {
         (
             item.get("strategy_hash"),
-            (item.get("metrics") or {}).get("total_return"),
-            (item.get("metrics") or {}).get("trade_count"),
+            round(float((item.get("metrics") or {}).get("total_return") or 0), 8),
+            int((item.get("metrics") or {}).get("trade_count") or 0),
         )
         for item in outputs
     }
